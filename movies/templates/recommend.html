@@ -1,0 +1,236 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Recommendations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+
+    h1 {
+      color: #1a73e8;
+      font-size: 2.5em;
+      text-align: center;
+      margin-top: 100px;
+      margin-bottom: 30px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+    }
+
+    .back-btn {
+      padding: 10px 15px;
+      background-color: #1a73e8;
+      color: white;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .back-btn:hover {
+      background-color: #155fcf;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background-color: white;
+      border-radius: 30px;
+      padding: 6px 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-bar input[type="text"] {
+      border: none;
+      outline: none;
+      font-size: 14px;
+      padding: 8px;
+      width: 180px;
+      border-radius: 30px;
+    }
+
+    .search-bar button {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #1a73e8;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+
+    .search-bar button:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    button[type="submitalt"] { 
+      background: none;
+      border: none;
+      font-size: 16px;
+      color:#1a73e8;
+      cursor: pointer;
+      margin-width: 8px;
+    }
+
+    form.recommendation-form {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    select {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 30px;
+      border: 1px solid #ccc;
+      width: 220px;
+      color: #666;
+    }
+
+    select:invalid {
+      color: #aaa;
+    }
+
+    button[type="submit"] {
+      padding: 10px 20px;
+      background-color: #1a73e8;
+      color: white;
+      border-radius: 30px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      width: 220px;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #155fcf;
+    }
+
+    .movie-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .movie-item {
+      text-align: center;
+      width: 180px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .movie-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+      border-radius: 10px;
+    }
+
+    .movie-item img {
+      width: 150px;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .movie-item a {
+      text-decoration: none;
+      color: #333;
+      margin-top: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      display: block;
+    }
+
+    .movie-item a:hover {
+      color: #1a73e8;
+    }
+
+    .no-recommendations {
+      font-size: 18px;
+      color: #cc0000;
+      text-align: center;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <!-- Back Button -->
+    <a href="{% url 'home' %}" class="back-btn">← Back to Home</a>
+
+    <!-- Search Bar -->
+    <form action="{% url 'home' %}" method="get" class="search-bar">
+      <input type="text" name="query" placeholder="Search for a movie..." value="{{ request.GET.query }}">
+      <button type="submitalt">&#128269;</button>
+    </form>
+  </div>
+
+  <h1>Recommended Movies for You</h1>
+
+  <div class="filter-section">
+    <form method="post" class="recommendation-form">
+      {% csrf_token %}
+
+      <select name="genre" required>
+        <option value="" disabled selected>🎭 Select Genre</option>
+        {% for genre in genres %}
+          <option value="{{ genre }}" {% if selected.genre == genre %}selected{% endif %}>{{ genre }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="mood" required>
+        <option value="" disabled selected>😊 Select Mood</option>
+        {% for mood in moods %}
+          <option value="{{ mood }}" {% if selected.mood == mood %}selected{% endif %}>{{ mood }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="platform" required>
+        <option value="" disabled selected>📺 Select Platform</option>
+        <option value="Any" {% if selected.platform == 'Any' %}selected{% endif %}>Any</option>
+        {% for platform in platforms %}
+          <option value="{{ platform }}" {% if selected.platform == platform %}selected{% endif %}>{{ platform }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">🎥 Recommend</button>
+    </form>
+  </div>
+
+  {% if recommended_movies %}
+    <div class="movie-grid">
+      {% for movie in recommended_movies %}
+        <div class="movie-item">
+          <a href="{% url 'movie_detail' movie.id %}">
+            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}"
+                 onerror="this.onerror=null;this.src='{% static 'default_poster_url.jpg' %}';">
+            <br>
+            {{ movie.title|upper }} ({{ movie.release_year }})
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% elif user_input_text %}
+    <p class="no-recommendations">No recommendations available. Please adjust your preferences and try again.</p>
+  {% endif %}
+
+</body>
+</html>
