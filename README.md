@@ -69,6 +69,3 @@ The AI Roadmap Generator depends on Ollama to run LLaMA locally.
 - In a separate terminal (before using roadmap): 
     ```bash
 	ollama run llama2
-
-## License
-This project is open-source under the MIT License.
